@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "525794322080",
+    "firebase_url": "https://waterproject-test-default-rtdb.firebaseio.com",
+    "project_id": "waterproject-test",
+    "storage_bucket": "waterproject-test.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525794322080:android:35aab0ba7923a2967f4bc5",
+        "android_client_info": {
+          "package_name": "com.example.firebasetest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF2zjhtXx2tKwdWQ6LF-gs-KjV8tgJKao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525794322080:android:68008e9ebc7321e37f4bc5",
+        "android_client_info": {
+          "package_name": "com.example.real_heartrate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF2zjhtXx2tKwdWQ6LF-gs-KjV8tgJKao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
