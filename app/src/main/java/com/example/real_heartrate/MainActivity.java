@@ -13,12 +13,18 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -34,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor heartRateSensor;
     private static final int REQUEST_BODY_SENSORS = 2;
     private static final int REQUEST_BODY_SENSORS_BACKGROUND = 3;
-    Button btn_hrTest_start,btn_hrTest_stop;
+    Button btn_hrTest_start,btn_hrTest_stop, btn_dring;
     TextView tv_hrTest;
     private boolean permissionGranted;
 
@@ -44,22 +50,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean IsPortioned = false;
 
     //水の量(mL単位)
-    private int water_amount = 500;
+    private int waterAmount = 500;
 
-    CountDownTimer　countDownTimer;
+    //タイマー残り時間
+    //2時間は72000000
+    private long remainTime = 40000;
 
+    CountDownTimer timer;
 
+    private long[] notifyTIme = new long[5];
 
+    //画像の切り替わり数(カウントダウン形式)
+    private int notifyCount = 4;
 
+    private long notifyTIming = 0;
 
+    private ImageView stateImage;
 
+    private VibrationEffect vib;
 
+    //温度、本番環境ではセンサ値を利用
+    private int temperture = 27;
+
+    //環境情報は0, 1, 2で判別
+    //0: 低温, 1:中温 2:高温
+    private int envState = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        stateImage = findViewById(R.id.state_image);
+        btn_dring = findViewById(R.id.drink_button);
 
 
         // Firebase Realtime Databaseへの参照を取得
@@ -97,18 +119,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-
-
-
-
-
-
-
-
-
-
-
-
         //);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -124,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
         // BODY_SENSORSパーミッションの確認
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.BODY_SENSORS)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS)
                 != PackageManager.PERMISSION_GRANTED) {
             // BODY_SENSORSパーミッションをリクエスト
             ActivityCompat.requestPermissions(this,
@@ -136,15 +146,192 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         //  セットアップbutton
-        btn_hrTest_start.setOnClickListener(view -> permissionGranted = true);
+        btn_hrTest_start.setOnClickListener(start_button_pushed);
 
 
         btn_hrTest_stop.setOnClickListener(view -> permissionGranted = false);
 
-        
+        btn_dring.setOnClickListener(dring_button_pushed);
+
+        if(temperture <= 25){
+            envState = 0;
+            //暫定
+            waterAmount = 400;
+        }
+        else if(temperture <= 30){
+            envState = 1;
+            //暫定
+            waterAmount = 500;
+        }
+        else{
+            envState = 2;
+            //暫定
+            waterAmount = 600;
+        }
 
     }
 
+    private View.OnClickListener dring_button_pushed = new View.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            timer.cancel();
+            notifyCount = 4;
+            stateImage.setImageResource(R.drawable.state6_6);
+            long devidedTIme = remainTime / 5;
+            devidedTIme = (remainTime - devidedTIme) / 5;
+            notifyTIming = devidedTIme;
+            for(int i = 0; i < 5; i++){
+                notifyTIme[i] = notifyTIming;
+                Log.d("each notify time", String.valueOf(notifyTIme[i]));
+                notifyTIming += devidedTIme;
+            }
+            timer = new CountDownTimer(remainTime, 1000){
+                @Override
+                public void onFinish(){
+                    // タイムアップ時の処理をここに記述
+                    // この場合start()を実行してから３秒後に呼ばれる
+                    timer.cancel();
+                }
+                @Override
+                public void onTick(long millisUntilFinished){
+                    // このメソッドの仮引数では残り時間が渡される
+                    // また、コンストラクタの第二引数で指定した間隔で呼ばれる
+                    // この場合１秒ごとに呼ばれる
+                    remainTime = millisUntilFinished;
+                    if(notifyTIme[notifyCount] > millisUntilFinished){
+                        //もうちょいうまくやれるかもとりあえずごり押し
+                        Log.d("message", "画像差し替え処理");
+                        if(notifyCount == 4){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state5_6);
+                        }
+                        else if(notifyCount == 3){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state4_6);
+                        }
+                        else if(notifyCount == 2){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.stete3_6);
+                        }
+                        else if(notifyCount == 1){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300, 300, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state2_6);
+                        }
+                        else if(notifyCount == 0){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300, 300, 300, 300, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state1_6);
+                        }
+                        notifyCount--;
+                        if(notifyCount < 0){
+                            notifyCount = 0;
+                        }
+                    }
+                }
+            };
+            timer.start();
+
+            Toast.makeText(MainActivity.this,"button clicked",Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private View.OnClickListener start_button_pushed = new View.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            permissionGranted = true;
+            timer = new CountDownTimer(remainTime, 1000){
+                @Override
+                public void onFinish(){
+                    // タイムアップ時の処理をここに記述
+                    // この場合start()を実行してから３秒後に呼ばれる
+                    timer.cancel();
+                }
+                @Override
+                public void onTick(long millisUntilFinished){
+                    // このメソッドの仮引数では残り時間が渡される
+                    // また、コンストラクタの第二引数で指定した間隔で呼ばれる
+                    // この場合１秒ごとに呼ばれる
+                    remainTime = millisUntilFinished;
+                    if(notifyTIme[notifyCount] > millisUntilFinished){
+                        //もうちょいうまくやれるかもとりあえずごり押し
+                        Log.d("message", "画像差し替え処理");
+                        if(notifyCount == 4){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state5_6);
+                        }
+                        else if(notifyCount == 3){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state4_6);
+                        }
+                        else if(notifyCount == 2){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.stete3_6);
+                        }
+                        else if(notifyCount == 1){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300, 300, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state2_6);
+                        }
+                        else if(notifyCount == 0){
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vib =  VibrationEffect.createWaveform(new long[]{0, 300, 300, 300, 300, 300, 300, 300, 300, 300}, VibrationEffect.DEFAULT_AMPLITUDE);
+                                Vibrator v = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+                                v.vibrate(vib);
+                            }
+                            stateImage.setImageResource(R.drawable.state1_6);
+                        }
+                        notifyCount--;
+                        if(notifyCount < 0){
+                            notifyCount = 0;
+                        }
+                    }
+                }
+            };
+            long devidedTIme = remainTime / 5;
+            devidedTIme = (remainTime - devidedTIme) / 5;
+            notifyTIming = devidedTIme;
+            for(int i = 0; i < 5; i++){
+                notifyTIme[i] = notifyTIming;
+                Log.d("each notify time", String.valueOf(notifyTIme[i]));
+                notifyTIming += devidedTIme;
+            }
+            timer.start();
+        }
+    };
 
     @Override
     protected void onResume() {
@@ -166,8 +353,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-
-
     private void checkBodySensorsBackgroundPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS_BACKGROUND)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -182,14 +367,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
-
-
-    public void drink(){
-
-    }
-
-
-
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -207,10 +384,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     }
-
-
-
-
-
 
 }
