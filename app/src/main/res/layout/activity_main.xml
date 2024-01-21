@@ -16,16 +16,16 @@
 
     <Button
         android:id="@+id/btn_hr_test_start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="69dp"
+        android:layout_height="41dp"
         android:layout_marginTop="32dp"
         android:text="Start"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_hr_test_stop"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.225"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline19"
-        app:layout_constraintVertical_bias="0.208" />
+        app:layout_constraintVertical_bias="0.229" />
 
     <TextView
         android:id="@+id/tv_hr_test"
@@ -66,8 +66,8 @@
 
     <Button
         android:id="@+id/btn_hr_test_stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="65dp"
+        android:layout_height="40dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="8dp"
         android:text="Stop"
@@ -78,12 +78,12 @@
 
     <Button
         android:id="@+id/drink_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="67dp"
+        android:layout_height="41dp"
         android:text="drink"
-        tools:layout_editor_absoluteX="67dp"
-        tools:layout_editor_absoluteY="21dp"
-        tools:ignore="MissingConstraints" />
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="5dp"
+        tools:layout_editor_absoluteY="16dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

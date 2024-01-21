@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         btn_hrTest_start.setOnClickListener(start_button_pushed);
 
 
-        btn_hrTest_stop.setOnClickListener(view -> permissionGranted = false);
+        btn_hrTest_stop.setOnClickListener(stop_button_pushed);
 
         btn_dring.setOnClickListener(dring_button_pushed);
 
@@ -170,6 +170,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
     }
+
+    private View.OnClickListener stop_button_pushed = new View.OnClickListener(){
+        @Override
+        public void onClick(View v) {
+            permissionGranted = false;
+            timer.cancel();
+        }
+    };
 
     private View.OnClickListener dring_button_pushed = new View.OnClickListener(){
         @Override
