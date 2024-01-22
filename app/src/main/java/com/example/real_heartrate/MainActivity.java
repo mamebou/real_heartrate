@@ -76,6 +76,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     //0: 低温, 1:中温 2:高温
     private int envState = 0;
 
+    int remainWarterAmount = 0;
+
+    private int tof;
+
+    private int defaultAmountPerMinit = 250 / 60;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,6 +116,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d("post","hum"+ post.hum);
             Log.d("post","tmp"+ post.tmp);
             Log.d("post","tof"+ post.tof);
+            tof = Integer.parseInt(post.tof);
+            remainWarterAmount = getRmainWaterAmount(tof);
             }
 
             @Override
@@ -185,13 +193,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             timer.cancel();
             notifyCount = 4;
             stateImage.setImageResource(R.drawable.state6_6);
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             long devidedTIme = remainTime / 5;
-            devidedTIme = (remainTime - devidedTIme) / 5;
-            notifyTIming = devidedTIme;
+            long defaultNeedWaterAmount = devidedTIme * defaultAmountPerMinit;
+            long needWaterAmountPerMin = (remainWarterAmount / remainTime);
+            Log.d("inDrink WarterAmount", String.valueOf(remainWarterAmount));
+            if(needWaterAmountPerMin == 0){
+                needWaterAmountPerMin = 1;
+            }
+            long notifyTImePer = (defaultNeedWaterAmount / needWaterAmountPerMin);
+            notifyTIming = notifyTImePer;
             for(int i = 0; i < 5; i++){
                 notifyTIme[i] = notifyTIming;
                 Log.d("each notify time", String.valueOf(notifyTIme[i]));
                 notifyTIming += devidedTIme;
+            }
+            if(remainWarterAmount == 0){
+                for(int i = 0; i < 5; i++){
+                    notifyTIme[i] = 1;
+                }
             }
             timer = new CountDownTimer(remainTime, 1000){
                 @Override
@@ -261,6 +285,26 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Toast.makeText(MainActivity.this,"button clicked",Toast.LENGTH_SHORT).show();
         }
     };
+
+    private int getRmainWaterAmount(int tofValue){
+        remainWarterAmount = 0;
+        if(tofValue <= 30){
+            remainWarterAmount = 500;
+        }
+        else if(tofValue <= 76){
+            remainWarterAmount = 400;
+        }
+        else if(tofValue <= 159){
+            remainWarterAmount = 300;
+        }
+        else if(tofValue <= 193){
+            remainWarterAmount = 200;
+        }
+        else if(tofValue <= 220){
+            remainWarterAmount = 100;
+        }
+        return remainWarterAmount;
+    }
 
     private View.OnClickListener start_button_pushed = new View.OnClickListener(){
         @Override
@@ -387,6 +431,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Log.d("heart rate tag", String.format("Heart Rate: %.2f", heartRate));
                 // 心拍数を表示するTextViewを設定
                 tv_hrTest.setText(String.format("HR: %.2f", heartRate));
+
             }
         }
 
