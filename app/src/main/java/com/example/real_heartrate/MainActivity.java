@@ -112,12 +112,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 Log.d("snap",dataSnapshot.toString());
            Post post = dataSnapshot.getValue(Post.class);
-                Log.d("post",post.toString());
+           String tofString = post.tof;
+           float tofFloat = Float.valueOf(tofString);
+           int tofInt = (int)tofFloat;
+                Log.d("post", String.valueOf(tofInt));
             Log.d("post","hum"+ post.hum);
             Log.d("post","tmp"+ post.tmp);
             Log.d("post","tof"+ post.tof);
-            tof = Integer.parseInt(post.tof);
-            remainWarterAmount = getRmainWaterAmount(tof);
+            //tof = Integer.parseInt(post.tof);
+            remainWarterAmount = getRmainWaterAmount(tofInt);
             }
 
             @Override
@@ -194,7 +197,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             notifyCount = 4;
             stateImage.setImageResource(R.drawable.state6_6);
             try {
-                Thread.sleep(10000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -288,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private int getRmainWaterAmount(int tofValue){
         remainWarterAmount = 0;
+        Log.d("tofValue", String.valueOf(tofValue));
         if(tofValue <= 30){
             remainWarterAmount = 500;
         }
@@ -434,8 +438,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             }
         }
-
-
     }
 
 }
